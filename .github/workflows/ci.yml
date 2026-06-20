@@ -9,6 +9,9 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Allow running the pipeline on demand (e.g. on a fork branch before the PR is
+  # approved for Actions, or to re-validate without a new commit).
+  workflow_dispatch:
 
 # Cancel superseded runs on the same ref so pushes don't queue up.
 concurrency:
