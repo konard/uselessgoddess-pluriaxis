@@ -1,0 +1,18 @@
+# Rust / Cargo build artifacts
+target/
+
+# Cargo.lock is committed (this workspace builds a binary game).
+
+# Editors / IDEs
+/.idea/
+/.vscode/
+*.swp
+*~
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Bevy / runtime
+*.log
+/imported_assets/

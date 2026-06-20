@@ -1,0 +1,24 @@
+[package]
+name = "spellvm"
+description = "A small, dependency-free stack virtual machine for crafting spells from rune glyphs and sigils."
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/uselessgoddess/pluriaxis"
+readme = "README.md"
+keywords = ["gamedev", "spell", "vm", "stack-machine", "magic"]
+categories = ["game-development", "simulation"]
+
+[features]
+default = []
+# Derive `serde::{Serialize, Deserialize}` for the public data types so spells
+# and sigils can be saved, shared and version-controlled.
+serde = ["dep:serde"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"], optional = true }
+
+[dev-dependencies]
+# Only used by the `serde`-gated integration test to verify round-trips.
+# The library itself stays dependency-free; this never reaches consumers.
+serde_json = "1"
