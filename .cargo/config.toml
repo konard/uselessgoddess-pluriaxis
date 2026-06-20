@@ -1,0 +1,9 @@
+# Faster linking on Linux. The default `cc` driver invokes `ld.lld`, so we get
+# LLD's speed without depending on clang. Install it with:
+#   Debian/Ubuntu:  sudo apt-get install lld
+#   Arch:           sudo pacman -S lld
+#   Fedora:         sudo dnf install lld
+# This block only applies to the Linux GNU target, so other platforms are
+# unaffected and keep their default linker.
+[target.x86_64-unknown-linux-gnu]
+rustflags = ["-Clink-arg=-fuse-ld=lld"]

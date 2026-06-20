@@ -1,0 +1,76 @@
+name: CI
+
+# Fast, cache-friendly pipeline. Formatting is split into its own near-instant
+# job; the heavy job runs clippy, the test suites and a binary build in sequence
+# so Bevy is compiled once per run (and cached across runs) instead of three
+# times in parallel.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel superseded runs on the same ref so pushes don't queue up.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  # Incremental compilation hurts more than it helps with a cold CI cache.
+  CARGO_INCREMENTAL: "0"
+  # Smaller, quieter rustc diagnostics in logs.
+  RUST_BACKTRACE: "1"
+
+jobs:
+  fmt:
+    name: rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned toolchain (rustfmt)
+        run: |
+          TOOLCHAIN=$(grep -oP 'channel\s*=\s*"\K[^"]+' rust-toolchain.toml)
+          rustup toolchain install "$TOOLCHAIN" --profile minimal --component rustfmt
+          rustup default "$TOOLCHAIN"
+      - run: cargo fmt --all --check
+
+  check:
+    name: clippy · test · build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # `lld` is required because `.cargo/config.toml` links with it; `libudev-dev`
+      # is needed by `libudev-sys` (pulled in transitively via `bevy_gilrs`).
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends lld libudev-dev pkg-config
+
+      - name: Install pinned toolchain (clippy)
+        run: |
+          TOOLCHAIN=$(grep -oP 'channel\s*=\s*"\K[^"]+' rust-toolchain.toml)
+          rustup toolchain install "$TOOLCHAIN" --profile minimal --component clippy
+          rustup default "$TOOLCHAIN"
+
+      - name: Cache cargo registry and target
+        uses: Swatinem/rust-cache@v2
+
+      # CI builds opt out of `dynamic_linking` (the `dev` default feature) and use
+      # the lean `ci` profile (opt-level 0, fast to compile) so all three steps
+      # below share one set of dependency artifacts.
+      - name: Clippy (deny warnings)
+        run: cargo clippy --workspace --all-targets --profile ci --no-default-features -- -D warnings
+
+      - name: Test (workspace)
+        run: cargo test --workspace --profile ci --no-default-features
+
+      - name: Test (spellvm + serde)
+        run: cargo test -p spellvm --profile ci --features serde
+
+      - name: Build game binary
+        run: cargo build --bin pluriaxis --profile ci --no-default-features

@@ -72,11 +72,11 @@ pub use vm::{Ingredient, Vm, VmError};
 /// assert_eq!(outcome.components[0].form, Form::Bolt);
 /// ```
 pub mod prelude {
-    pub use crate::element::{Element, Rgb};
-    pub use crate::glyph::{Category, Glyph, Rune};
-    pub use crate::math::{Vec2, vec2};
-    pub use crate::outcome::{Form, Modifier, SpellComponent, SpellOutcome};
-    pub use crate::sigil::{Node, Sigil, Style};
-    pub use crate::spell::{Spell, SpellError};
-    pub use crate::vm::{Ingredient, Vm, VmError};
+  pub use crate::element::{Element, Rgb};
+  pub use crate::glyph::{Category, Glyph, Rune};
+  pub use crate::math::{Vec2, vec2};
+  pub use crate::outcome::{Form, Modifier, SpellComponent, SpellOutcome};
+  pub use crate::sigil::{Node, Sigil, Style};
+  pub use crate::spell::{Spell, SpellError};
+  pub use crate::vm::{Ingredient, Vm, VmError};
 }

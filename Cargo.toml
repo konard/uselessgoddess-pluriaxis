@@ -1,0 +1,78 @@
+[package]
+name = "pluriaxis"
+description = "A procedural spellcasting playground where wizards draw spells as points-and-lines sigils."
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/uselessgoddess/pluriaxis"
+readme = "README.md"
+publish = false
+
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+[dependencies]
+# The engine-agnostic rules engine. `serde` lets us save and share spells.
+spellvm = { path = "crates/spellvm", features = ["serde"] }
+
+# Only the features a 2D, asset-light game needs — smaller and faster to build.
+# `2d`  -> sprites, gizmos, camera, color, post-processing (bloom)
+# `ui`  -> nodes, text, buttons, picking
+# tonemapping LUTs are embedded (decoded via ktx2 + zstd), so no asset files.
+bevy = { version = "0.19", default-features = false, features = [
+  "2d",
+  "ui",
+  "tonemapping_luts",
+  "ktx2",
+  "zstd_rust",
+] }
+
+[features]
+# Default to a fast native dev build.
+default = ["dev"]
+# Link Bevy as a shared library for much faster incremental builds.
+# Release/CI builds opt out with `--no-default-features`.
+dev = ["bevy/dynamic_linking"]
+
+[lints.rust]
+# `bevy_lint` sets this cfg when the Bevy linter runs.
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(bevy_lint)"] }
+
+[lints.clippy]
+# Bevy injects system arguments, so many-argument systems are idiomatic.
+too_many_arguments = "allow"
+# Queries are naturally complex types.
+type_complexity = "allow"
+# Keep `children![]` using square brackets.
+nonstandard_macro_braces = "warn"
+
+# --- Compile-time / runtime tuning ---------------------------------------
+# See <https://bevy.org/learn/quick-start/getting-started/setup/>.
+
+# A little optimization for our own code keeps the game smooth in dev...
+[profile.dev]
+opt-level = 1
+
+# ...and full optimization for dependencies (compiled once, then cached).
+[profile.dev.package."*"]
+opt-level = 3
+
+# Avoid an expensive wgpu debug assertion in dev builds.
+# <https://github.com/bevyengine/bevy/issues/14291>
+[profile.dev.package.wgpu-types]
+debug-assertions = false
+
+[profile.release]
+codegen-units = 1
+lto = "thin"
+
+# A lean profile for CI: skip optimization to compile as fast as possible.
+[profile.ci]
+inherits = "dev"
+opt-level = 0
+debug = "line-tables-only"
+codegen-units = 4
+
+[profile.ci.package."*"]
+opt-level = 0

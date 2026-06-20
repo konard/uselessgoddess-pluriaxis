@@ -1,0 +1,10 @@
+style_edition = "2024"
+
+# Imports are kept as one merged tree per module by convention. The rustfmt
+# option that enforces it (`imports_granularity = "One"`) is nightly-only, and
+# this workspace pins stable, so we omit it to keep `cargo fmt` warning-free.
+use_small_heuristics = "Max"
+use_field_init_shorthand = true
+
+tab_spaces = 2
+max_width = 80
